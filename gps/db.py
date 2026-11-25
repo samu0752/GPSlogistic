@@ -41,6 +41,7 @@ def initialize(path: DatabasePath) -> None:
     connection = connect(path)
     try:
         connection.execute("PRAGMA journal_mode=WAL")
+        connection.execute("PRAGMA synchronous=NORMAL")
     finally:
         connection.close()
 

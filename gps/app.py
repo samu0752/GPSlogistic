@@ -171,66 +171,78 @@ def create_app(
 
     @app.template_filter("localdate")
     def localdate(value):
-        return (
-            datetime.fromisoformat(value)
-            .astimezone(timezone(timedelta(hours=-3)))
-            .strftime("%d/%m/%Y %H:%M:%S")
-        )
+        if not value:
+            return "—"
+        parsed = datetime.fromisoformat(value)
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=UTC)
+        return parsed.astimezone(timezone(timedelta(hours=-3))).strftime("%d/%m/%Y %H:%M:%S")
 
     @app.template_filter("number")
     def number(value):
         return f"{value:,}".replace(",", ".")
 
+    def wants_json() -> bool:
+        if request.path.startswith(("/api/v1/", "/health")):
+            return True
+        best = request.accept_mimetypes.best_match(["application/json", "text/html"])
+        return best == "application/json" and (
+            request.accept_mimetypes[best] > request.accept_mimetypes["text/html"]
+        )
+
+    def render_error(status: int, title: str, message: str):
+        if wants_json():
+            return {"code": status, "title": title, "error": message}, status
+        return render_template("error.html", code=status, title=title, message=message), status
+
     @app.errorhandler(svc.PermissionDenied)
     def denied(error):
-        return render_template("error.html", title="Acesso restrito", message=str(error)), 403
+        return render_error(403, "Acesso restrito", str(error))
 
     @app.errorhandler(svc.RuleError)
     def rule(error):
-        if request.path.startswith("/api/v1/"):
-            return {"error": str(error)}, 400
-        return render_template(
-            "error.html", title="Operação não realizada", message=str(error)
-        ), 400
+        return render_error(400, "Operação não realizada", str(error))
 
     @app.errorhandler(sqlite3.IntegrityError)
     def conflict(error):
         app.logger.warning("Restrição de integridade: %s", error)
-        return render_template(
-            "error.html",
-            title="Cadastro ou operação recusada",
-            message=(
+        return render_error(
+            409,
+            "Cadastro ou operação recusada",
+            (
                 "Há um código já cadastrado ou uma regra de integridade não atendida. "
                 "Nenhuma alteração parcial foi salva."
             ),
-        ), 409
+        )
 
     @app.errorhandler(sqlite3.OperationalError)
     def database_error(error):
         app.logger.exception("Falha no banco de dados")
-        return render_template(
-            "error.html",
-            title="Banco temporariamente indisponível",
-            message="Tente novamente. Se o problema persistir, consulte o guia de operação.",
-        ), 503
+        return render_error(
+            503,
+            "Banco temporariamente indisponível",
+            "Tente novamente. Se o problema persistir, consulte o guia de operação.",
+        )
 
-    for status in (400, 403, 404, 413, 500):
+    for status in (400, 403, 404, 405, 409, 413, 422, 429, 500):
 
         def http_error(error, status=status):
-            if request.path.startswith("/api/v1/"):
-                return {"error": f"Requisição recusada ({status})."}, status
-            messages = {
-                400: "Formulário inválido ou expirado. Reabra a tela.",
-                403: "Seu perfil não permite esta ação.",
-                404: "O registro ou a página não foi encontrado.",
-                413: "Formulário maior que o limite permitido.",
-                500: "Ocorreu um erro interno. Consulte os registros técnicos.",
+            catalog = {
+                400: ("Requisição inválida", "Formulário inválido ou expirado. Reabra a tela."),
+                403: ("Acesso restrito", "Seu perfil não permite esta ação."),
+                404: ("Não encontrado", "O registro ou a página não foi encontrado."),
+                405: ("Método não permitido", "Esta rota não aceita o método enviado."),
+                409: ("Conflito de operação", "O estado atual impediu a conclusão da operação."),
+                413: ("Envio muito grande", "Formulário ou arquivo maior que o limite permitido."),
+                422: ("Dados inválidos", "Não foi possível processar os dados enviados."),
+                429: ("Muitas tentativas", "Aguarde alguns minutos antes de tentar novamente."),
+                500: (
+                    "Erro interno do servidor",
+                    "Ocorreu um erro interno. Consulte os registros técnicos.",
+                ),
             }
-            return render_template(
-                "error.html",
-                title=f"Não foi possível continuar ({status})",
-                message=messages[status],
-            ), status
+            title, message = catalog[status]
+            return render_error(status, title, message)
 
         app.register_error_handler(status, http_error)
 
