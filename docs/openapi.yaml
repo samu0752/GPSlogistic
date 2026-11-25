@@ -1,0 +1,108 @@
+openapi: 3.1.0
+info:
+  title: GPSlogistic · API de leitura
+  version: 1.0.0
+servers:
+  - url: /
+security:
+  - sessionCookie: []
+paths:
+  /api/v1/estoque:
+    get:
+      operationId: listarEstoque
+      summary: Lista saldos por SKU e locação
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - {name: page, in: query, schema: {type: integer, minimum: 1, maximum: 1000000, default: 1}}
+        - {name: q, in: query, schema: {type: string, maxLength: 100}}
+        - {name: area, in: query, schema: {type: string}}
+        - {name: brand, in: query, schema: {type: string}}
+        - {name: low, in: query, schema: {type: string, enum: ['1']}}
+      responses:
+        '200':
+          description: Página de estoque
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, next_page]
+                properties:
+                  items:
+                    type: array
+                    items: {$ref: '#/components/schemas/Stock'}
+                  next_page: {type: [integer, 'null']}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '401': {$ref: '#/components/responses/Login'}
+        '403': {$ref: '#/components/responses/Password'}
+  /api/v1/movimentacoes:
+    get:
+      operationId: listarMovimentacoes
+      summary: Lista lançamentos do mais novo para o mais antigo
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - name: before
+          in: query
+          description: ID exclusivo devolvido em next_before
+          schema: {type: integer, format: int64, minimum: 1}
+        - {name: sku, in: query, schema: {type: string}}
+        - {name: location, in: query, schema: {type: string}}
+        - {name: q, in: query, schema: {type: string, maxLength: 100}}
+        - name: kind
+          in: query
+          schema: {type: string, enum: [initial, in, out, transfer, count, reversal]}
+        - {name: start, in: query, schema: {type: string, format: date}}
+        - {name: end, in: query, schema: {type: string, format: date}}
+      responses:
+        '200':
+          description: Página de lançamentos. Datas de filtro em BRT.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, next_before]
+                properties:
+                  items:
+                    type: array
+                    items: {$ref: '#/components/schemas/Movement'}
+                  next_before: {type: [integer, 'null']}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '401': {$ref: '#/components/responses/Login'}
+        '403': {$ref: '#/components/responses/Password'}
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: session
+      description: Sessão Flask criada pelo formulário /login
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      schema: {type: integer, minimum: 1, maximum: 100, default: 40}
+  responses:
+    Invalid: {description: Parâmetros inválidos}
+    Login: {description: Sessão ausente ou expirada}
+    Password: {description: Troca de senha pendente}
+  schemas:
+    Stock:
+      type: object
+      properties:
+        sku: {type: string}
+        brand: {type: string}
+        unit: {type: string}
+        location: {type: [string, 'null']}
+        quantity: {type: integer, minimum: 0}
+    Movement:
+      type: object
+      properties:
+        id: {type: integer}
+        operation_id: {type: integer}
+        sku: {type: string}
+        location: {type: string}
+        kind: {type: string}
+        created_at: {type: string, format: date-time}
+        before_qty: {type: integer, minimum: 0}
+        delta: {type: integer}
+        after_qty: {type: integer, minimum: 0}
+        reversal_of: {type: [integer, 'null']}
