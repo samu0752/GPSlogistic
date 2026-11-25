@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Acuracidade{% endblock %}
+{% block content %}
+<div class="page-heading"><div><h1>Acuracidade do inventário</h1><p class="muted">Compara a contagem física com o saldo anterior a cada contagem.</p></div></div>
+<div class="metrics">
+  <article><span>Contagens</span><strong>{{ report.counts }}</strong></article>
+  <article><span>Contagens exatas</span><strong>{{ '%.1f%%'|format(report.exact_pct) if report.exact_pct is not none else '—' }}</strong></article>
+  <article><span>Acuracidade por unidade</span><strong>{{ '%.1f%%'|format(report.units_pct) if report.units_pct is not none else '—' }}</strong></article>
+  <article><span>Diferenças absolutas</span><strong>{{ report.gap }}</strong></article>
+</div>
+<section class="panel table-panel"><div class="panel-heading"><h2>Ranking de divergências por SKU</h2></div>
+<div class="table-scroll"><table>
+  <thead><tr><th>SKU</th><th>Marca</th><th>Contagens</th><th>Sistema</th><th>Físico</th><th>Diferença absoluta</th></tr></thead>
+  <tbody>{% for row in report.ranking %}<tr><td><a href="{{ url_for('product', sku=row.sku) }}">{{ row.sku }}</a></td><td>{{ row.brand }}</td><td>{{ row.counted }}</td><td>{{ row.expected }}</td><td>{{ row.physical }}</td><td>{{ row.gap }}</td></tr>
+  {% else %}<tr><td class="empty" colspan="6">Nenhuma divergência registrada.</td></tr>{% endfor %}</tbody>
+</table></div></section>
+{% endblock %}

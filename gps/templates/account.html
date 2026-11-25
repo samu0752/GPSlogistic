@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import hidden with context %}
+{% block title %}{{ 'Primeiro acesso' if pending else 'Minha conta' }}{% endblock %}
+{% block content %}
+<section class="panel {{ 'login-panel' if pending else 'narrow' }}" aria-labelledby="account-title">
+  {% if pending %}
+  <div class="login-brand">
+    <img src="{{ url_for('static', filename='mark.svg') }}" width="42" height="42" alt="">
+    <div><strong>GPSlogistic</strong></div>
+  </div>
+  {% endif %}
+  <h1 id="account-title">{{ 'Defina sua senha' if pending else 'Alterar senha' }}</h1>
+  <p>{{ g.user.name }} · {{ g.user.role }}</p>
+  {% if error %}<p class="notice error" role="alert">{{ error }}</p>{% endif %}
+  <form method="post">
+    {{ hidden() }}
+    <label>{{ 'Senha temporária' if pending else 'Senha atual' }}<input type="password" name="old" maxlength="128" required autocomplete="current-password"></label>
+    <label>Nova senha<input type="password" name="new" minlength="12" maxlength="128" required autocomplete="new-password"></label>
+    {% if pending %}<label>Confirme a nova senha<input type="password" name="confirm" minlength="12" maxlength="128" required autocomplete="new-password"></label>{% endif %}
+    <p class="hint">Use entre 12 e 128 caracteres. Ao salvar, entre novamente com a nova senha.</p>
+    <button>Salvar nova senha</button>
+  </form>
+  <hr>
+  <form method="post" action="{{ url_for('logout') }}">{{ hidden() }}<button class="secondary">Encerrar sessão</button></form>
+</section>
+{% endblock %}

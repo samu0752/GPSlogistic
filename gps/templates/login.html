@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import hidden with context %}
+{% block title %}Entrar{% endblock %}
+{% block content %}
+<section class="panel login-panel" aria-labelledby="login-title">
+  <div class="login-brand">
+    <img src="{{ url_for('static', filename='mark.svg') }}" width="42" height="42" alt="">
+    <div><strong>GPSlogistic</strong></div>
+  </div>
+  <h1 id="login-title">Entrar no sistema</h1>
+  {% if error %}<div class="notice error" role="alert">{{ error }}</div>{% endif %}
+  <form method="post">
+    {{ hidden() }}
+    <label>Usuário<input name="username" required autocomplete="username" maxlength="40" autofocus></label>
+    <label>Senha<input type="password" name="password" required autocomplete="current-password" maxlength="128"></label>
+    <button type="submit" class="full">Entrar</button>
+  </form>
+  <p class="hint">Use seu usuário e senha. Contas novas recebem uma senha temporária para o primeiro acesso.</p>
+  <div class="company-brand login-company"><img src="{{ url_for('static', filename='memouniverse.svg') }}" width="25" height="25" alt="">MemoUniverse</div>
+</section>
+{% endblock %}

@@ -1,0 +1,2 @@
+{% macro hidden() %}<input type="hidden" name="csrf" value="{{ csrf() }}">{% endmacro %}
+{% macro pager(endpoint,page,total,args) %}<div class="pagination"><span>{{ total|number }} registros · página {{ page }}</span><div>{% if page>1 %}<a class="button secondary" href="{{ url_for(endpoint,page=page-1,**args) }}">← Anterior</a>{% endif %}{% if page*40<total %}<a class="button secondary" href="{{ url_for(endpoint,page=page+1,**args) }}">Próxima →</a>{% endif %}</div></div>{% endmacro %}

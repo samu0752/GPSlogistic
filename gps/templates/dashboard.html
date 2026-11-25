@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Visão geral{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <h1>Visão geral do estoque</h1>
+  <a class="button" href="{{ url_for('movement') }}">Nova movimentação</a>
+</div>
+<div class="metrics">
+  <article><span>Unidades comerciais</span><strong>{{ stats.units|number }}</strong></article>
+  <article><span>Produtos ativos</span><strong>{{ stats.products|number }}</strong></article>
+  <article><span>Locações ativas</span><strong>{{ stats.locations|number }}</strong></article>
+  <article><span>Operações registradas</span><strong>{{ stats.operations|number }}</strong></article>
+</div>
+<div class="notice stock-alert">
+  <strong>{{ stats.low }} produtos abaixo do mínimo</strong>
+  <a href="{{ url_for('stock', low=1) }}">Consultar produtos</a>
+</div>
+<div class="dashboard-grid">
+  <section class="panel table-panel">
+    <div class="section-heading panel-heading">
+      <h2 id="area-title">Estoque por área</h2>
+      <a href="{{ url_for('locations') }}">Ver locações</a>
+    </div>
+    <div class="table-scroll" tabindex="0" role="region" aria-labelledby="area-title">
+      <table class="area-table" aria-labelledby="area-title">
+        <thead>
+          <tr><th scope="col">Área</th><th scope="col" class="numeric">Posições</th><th scope="col" class="numeric">Unidades</th></tr>
+        </thead>
+        <tbody>
+          {% for area in areas %}
+          <tr>
+            <td><a href="{{ url_for('stock', area=area.code) }}"><span class="mono">{{ area.code }}</span> {{ area.category }}{% if area.type != area.category %} {{ area.type }}{% endif %}</a></td>
+            <td class="numeric">{{ area.positions }}</td>
+            <td class="numeric">{{ area.quantity|number }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3" class="empty">Nenhuma área cadastrada.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section class="panel activity">
+    <div class="section-heading panel-heading">
+      <h2>Últimas operações</h2>
+      <a href="{{ url_for('history') }}">Ver histórico</a>
+    </div>
+    {% for op in recent %}
+    <a class="activity-item" href="{{ url_for('operation_detail', operation_id=op.id) }}">
+      <strong>{{ kinds[op.kind] }}</strong> <span class="mono muted">#{{ op.id }}</span>
+      <p>{{ op.reason|truncate(85) }}</p>
+      <small>{{ op.name }} · {{ op.created_at|localdate }}</small>
+    </a>
+    {% else %}
+    <p class="activity-empty muted">Nenhuma operação registrada.</p>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}

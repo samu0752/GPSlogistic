@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Importar produtos{% endblock %}
+{% block content %}
+<div class="page-heading"><div><h1>Importar produtos por CSV</h1><p class="muted">Os produtos válidos são cadastrados com saldo inicial zero.</p></div><a class="button secondary" href="{{ url_for('product_csv_template') }}">Baixar modelo</a></div>
+<section class="panel narrow">
+<form method="post" enctype="multipart/form-data">
+  <input type="hidden" name="csrf" value="{{ csrf() }}">
+  <label>Arquivo CSV, UTF-8, até 256 KiB e 500 linhas<input type="file" name="products" accept=".csv,text/csv" required></label>
+  <button>Importar produtos</button>
+</form>
+</section>
+{% if imported is not none %}
+<section class="panel"><h2>Resultado</h2><p>{{ imported }} importado(s) · {{ errors|length }} erro(s)</p>
+{% if errors %}<table><thead><tr><th>Linha</th><th>Erro</th></tr></thead><tbody>
+{% for line, message in errors %}<tr><td>{{ line }}</td><td>{{ message }}</td></tr>{% endfor %}
+</tbody></table>{% endif %}</section>
+{% endif %}
+{% endblock %}

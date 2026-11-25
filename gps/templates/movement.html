@@ -1,0 +1,28 @@
+{% extends 'base.html' %}{% from 'macros.html' import hidden with context %}{% block title %}{{ kinds[kind] }}{% endblock %}{% block content %}
+<div class="page-heading"><div><p class="eyebrow">REGISTRAR OPERAÇÃO</p><h1>{{ kinds[kind] }}</h1><p class="muted">Todo movimento tem responsável, motivo e saldo anterior preservado.</p></div><a class="button secondary" href="{{ url_for('movement', kind=kind, sku=selected, location=place, collector=0 if collector else 1) }}">{{ 'Modo padrão' if collector else 'Modo coletor' }}</a></div>
+<nav class="tabs" aria-label="Tipo de movimentação">{% for k in ['in','out','transfer','count'] %}{% if k!='count' or supervisor %}<a href="{{ url_for('movement',kind=k,sku=selected,location=place,collector=1 if collector else 0) }}" {% if kind==k %}aria-current="page"{% endif %}>{{ kinds[k] }}</a>{% endif %}{% endfor %}</nav>
+<div class="two-columns"><section class="panel"><form method="post" id="movement-form" class="{{ 'collector-form' if collector else '' }}" data-kind="{{ kind }}">{{ hidden() }}<input type="hidden" name="key" value="{{ request_key() }}"><input type="hidden" name="kind" value="{{ kind }}"><input type="hidden" id="expected" name="expected" value="">
+<label>Produto · SKU ou código do fabricante<input name="sku" id="sku" list="products" value="{{ selected }}" placeholder="Digite ou leia o SKU do produto" required autocomplete="off" maxlength="100" {% if collector %}autofocus{% endif %}></label><datalist id="products">{% for p in products %}<option value="{{ p.sku }}" data-code="{{ p.manufacturer_code }}" data-brand="{{ p.brand }}" data-type="{{ p.type }}" data-unit="{{ p.unit }}">{{ p.description }}</option>{% endfor %}</datalist><p id="product-description" class="hint" aria-live="polite">Selecione um SKU do catálogo.</p>
+{% if collector %}<label>Ler código da locação<input id="scan-location" autocomplete="off" placeholder="Leia o endereço e pressione Enter"></label>{% endif %}
+<label>{{ 'Origem' if kind=='transfer' else 'Locação' }}<select name="location" id="location" data-selected="{{ place }}" required><option value="">Selecione a locação</option>{% for loc in locations %}<option value="{{ loc.code }}" data-brand="{{ loc.brand }}" data-type="{{ loc.type }}" {% if loc.code==place %}selected{% endif %}>{{ loc.code }} · {{ loc.type }} · {{ loc.brand }}</option>{% endfor %}</select></label>
+{% if kind=='transfer' %}{% if collector %}<label>Ler código do destino<input id="scan-destination" autocomplete="off" placeholder="Leia o destino e pressione Enter"></label>{% endif %}<label>Destino<select name="destination" id="destination" required><option value="">Selecione o destino</option>{% for loc in locations %}<option value="{{ loc.code }}" data-brand="{{ loc.brand }}" data-type="{{ loc.type }}">{{ loc.code }} · {{ loc.type }} · {{ loc.brand }}</option>{% endfor %}</select></label>{% endif %}
+<label>{{ 'Quantidade encontrada na contagem física' if kind=='count' else 'Quantidade de unidades comerciais' }}<input type="number" name="quantity" id="quantity" min="{{ 0 if kind=='count' else 1 }}" max="1000000000" step="1" required inputmode="numeric"></label>
+<label>Motivo<textarea name="reason" required minlength="8" maxlength="500" rows="3" placeholder="Ex.: saída para demonstração do pedido TESTE-001"></textarea></label>
+{% if kind=='count' %}<label class="checkbox"><input type="checkbox" name="confirmed" value="yes" required>Realizei a contagem física e confirmo a quantidade informada.</label>{% endif %}
+<button type="submit" class="full">Registrar {{ kinds[kind]|lower }} →</button></form></section>
+<aside><section class="panel preview"><p class="eyebrow">PRÉVIA DA OPERAÇÃO</p><h2>Confira antes de registrar</h2><dl><dt>Saldo atual na locação</dt><dd id="current-balance">—</dd><dt>{{ 'Saldo após a contagem' if kind=='count' else 'Saldo previsto na origem' }}</dt><dd id="next-balance">—</dd></dl><p id="preview-warning" class="hint" role="status">Escolha o produto e a locação.</p>{% if kind=='transfer' %}<p>O destino recebe exatamente a quantidade retirada da origem. As duas alterações são gravadas juntas.</p>{% endif %}</section><div class="notice">{% if kind=='count' %}<strong>Contagem é uma correção justificada.</strong> Pode zerar o saldo, mas preserva a quantidade anterior e registra a diferença. Se o saldo mudar durante o preenchimento, a contagem será recusada.{% else %}<strong>Seu histórico permanece.</strong> Um erro pode ser corrigido por supervisor ou administrador com um estorno vinculado. Não há exclusão de saldo.{% endif %}</div><p class="hint">A prévia usa o saldo carregado nesta tela. O servidor valida novamente ao salvar. Kits de RAM são movimentados fechados.</p></aside></div>
+{% if collector %}
+<section class="panel collector-camera" aria-labelledby="camera-heading">
+  <h2 id="camera-heading">Leitura pela câmera <small>Experimental</small></h2>
+  <p id="camera-status" class="hint" role="status">Selecione o campo que deseja preencher.</p>
+  <div class="tabs">
+    <button class="secondary" type="button" data-camera-field="sku">Ler produto</button>
+    <button class="secondary" type="button" data-camera-field="scan-location">Ler origem</button>
+    {% if kind == 'transfer' %}<button class="secondary" type="button" data-camera-field="scan-destination">Ler destino</button>{% endif %}
+  </div>
+  <video id="collector-video" autoplay playsinline muted hidden></video>
+  <button id="camera-stop" class="secondary" hidden type="button">Fechar câmera</button>
+</section>
+<script src="{{ url_for('static', filename='camera.js') }}" defer></script>
+{% endif %}
+<script type="application/json" id="balance-data">{{ balance_data|tojson }}</script>{% endblock %}

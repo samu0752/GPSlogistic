@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}GPSlogistic{% endblock %} · MemoUniverse</title>
+<link rel="icon" href="{{ url_for('static',filename='mark.svg') }}" type="image/svg+xml">
+<link rel="stylesheet" href="{{ url_for('static',filename='app.css') }}">
+<script defer src="{{ url_for('static',filename='app.js') }}"></script></head>
+<body><a class="skip" href="#main">Ir ao conteúdo</a>
+{% set workspace = g.user and not g.user.must_change_password %}
+{% if workspace %}<aside class="sidebar">
+<a class="brand" href="{{ url_for('dashboard') }}"><img src="{{ url_for('static',filename='mark.svg') }}" alt="" width="36" height="36"><span>GPS<span class="light">logistic</span></span></a>
+<p class="nav-label">OPERAÇÃO</p><nav aria-label="Menu principal">
+{% for endpoint,label,symbol in [('dashboard','Visão geral','◈'),('stock','Estoque','▦'),('movement','Movimentar','↔'),('history','Histórico','◷'),('locations','Locações','⌖'),('analytics_page','Análises','▤')] %}
+<a href="{{ url_for(endpoint) }}" {% if request.endpoint==endpoint %}aria-current="page"{% endif %}><span aria-hidden="true">{{ symbol }}</span>{{ label }}</a>{% endfor %}
+{% if supervisor %}<p class="nav-label">GESTÃO</p><a href="{{ url_for('discrepancies') }}" {% if request.endpoint=='discrepancies' %}aria-current="page"{% endif %}><span aria-hidden="true">≠</span>Divergências</a><a href="{{ url_for('masters') }}" {% if request.endpoint=='masters' %}aria-current="page"{% endif %}><span>＋</span>Cadastros</a>{% endif %}
+{% if administrator %}<a href="{{ url_for('users') }}" {% if request.endpoint=='users' %}aria-current="page"{% endif %}><span>◎</span>Usuários</a><a href="{{ url_for('audit') }}" {% if request.endpoint=='audit' %}aria-current="page"{% endif %}><span>✓</span>Auditoria</a>{% endif %}</nav>
+<div class="sidebar-bottom"><p class="environment-label">Ambiente simulado</p><a href="{{ url_for('account') }}">{{ g.user.name }} · {{ g.user.role }}</a><form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf() }}"><button class="logout" type="submit">Sair</button></form></div>
+</aside>{% endif %}
+<div class="{{ 'workspace' if workspace else 'public' }}">
+{% if workspace %}<header class="topbar"><span class="company-brand"><img src="{{ url_for('static', filename='memouniverse.svg') }}" width="26" height="26" alt="">MemoUniverse</span><a href="{{ url_for('account') }}">Minha conta</a></header>{% endif %}
+<main id="main">{% for category,message in get_flashed_messages(with_categories=true) %}<div class="notice {{ category }}" role="status">{{ message }}</div>{% endfor %}
+{% block content %}{% endblock %}</main>
+<footer>GPSlogistic · Samuel Xavier Sampaio · Empresa e saldos simulados.</footer></div></body></html>

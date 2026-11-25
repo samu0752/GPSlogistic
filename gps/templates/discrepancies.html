@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import hidden with context %}
+{% block title %}Divergências{% endblock %}
+{% block content %}
+<p><a class="button secondary" href="{{ url_for('inventory_accuracy') }}">Relatório de acuracidade</a></p>
+<div class="page-heading"><h1>Divergências de inventário</h1></div>
+<nav class="tabs" aria-label="Estado da revisão">
+  <a href="{{ url_for('discrepancies') }}" {% if not reviewed %}aria-current="page"{% endif %}>Pendentes</a>
+  <a href="{{ url_for('discrepancies', reviewed=1) }}" {% if reviewed %}aria-current="page"{% endif %}>Revisadas</a>
+</nav>
+{% for row in rows %}
+<section class="panel">
+  <h2>{{ row.sku }} · {{ row.location }}</h2>
+  <p>{{ row.before_qty|number }} → <strong>{{ row.after_qty|number }}</strong> unidades
+    · Diferença {{ '+' if row.delta > 0 else '' }}{{ row.delta|number }}</p>
+  <p>{{ row.name }} · {{ row.created_at|localdate }} · {{ row.reason }}</p>
+  <div class="row-actions">
+    <a href="{{ url_for('operation_detail', operation_id=row.operation_id) }}">Operação #{{ row.operation_id }}</a>
+    <a href="{{ url_for('history', sku=row.sku, location=row.location) }}">Histórico da locação</a>
+  </div>
+  {% if reviewed %}
+    <p><strong>{{ row.reviewer }}</strong> · {{ row.reviewed_at|localdate }} · {{ row.review_note }}</p>
+  {% else %}
+    <form method="post" action="{{ url_for('review_discrepancy', entry_id=row.id) }}">
+      {{ hidden() }}
+      <label>Observação da revisão<textarea name="note" rows="2" required minlength="8" maxlength="500"></textarea></label>
+      <button>Concluir revisão</button>
+    </form>
+  {% endif %}
+</section>
+{% else %}
+<p class="notice">Nenhuma divergência {{ 'revisada' if reviewed else 'pendente' }}.</p>
+{% endfor %}
+{% endblock %}
