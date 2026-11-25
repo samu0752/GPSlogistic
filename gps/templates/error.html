@@ -1,1 +1,13 @@
-{% extends 'base.html' %}{% block title %}{{ title }}{% endblock %}{% block content %}<section class="panel error-page"><span class="badge warning">VERIFIQUE A SOLICITAÇÃO</span><h1>{{ title }}</h1><p>{{ message }}</p><p class="muted">Use Voltar no navegador para conferir o formulário. Recarregue a tela se o saldo tiver mudado.</p><a class="button" href="{{ url_for('dashboard') }}">Voltar ao início</a></section>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="panel error-page" role="alert">
+  <span class="badge warning">{% if code %}HTTP {{ code }}{% else %}VERIFIQUE A SOLICITAÇÃO{% endif %}</span>
+  <h1>{{ title }}</h1>
+  <p>{{ message }}</p>
+  <p class="muted">Use Voltar no navegador para conferir o formulário ou recarregue a tela se o saldo tiver mudado.</p>
+  <a class="button" href="{{ url_for('dashboard') if g.user else url_for('login') }}">
+    {{ 'Voltar ao início' if g.user else 'Ir para o login' }}
+  </a>
+</section>
+{% endblock %}
