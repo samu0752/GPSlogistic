@@ -1,0 +1,21 @@
+name: Segurança
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 9 * * 1'
+permissions:
+  contents: read
+jobs:
+  analise:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-dev.txt
+      - name: Análise estática
+        run: python -m bandit -r gps manage.py run.py -ll -ii
+      - name: Auditoria de dependências de execução
+        run: python -m pip_audit -r requirements.txt

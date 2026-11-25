@@ -1,0 +1,25 @@
+name: Docker Compose
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inicialize e execute
+        shell: bash
+        run: |
+          docker compose build
+          result=$(docker compose run --rm -T gps python manage.py init --generate-password)
+          [[ "$result" == *"Senha temporária"* ]]
+          unset result
+          docker compose up -d --wait
+          curl --fail --silent http://127.0.0.1:5050/health | grep -F '"status":"ok"'
+          curl --fail --silent http://127.0.0.1:5050/login > /dev/null
+          docker compose restart
+          docker compose up -d --wait
+          docker compose exec -T gps python manage.py check
+      - name: Encerrar ambiente de teste
+        if: always()
+        run: docker compose down --volumes
