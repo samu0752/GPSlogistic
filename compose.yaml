@@ -1,0 +1,21 @@
+services:
+  gps:
+    build: .
+    environment:
+      GPS_DATABASE: /app/instance/gpslogistic.db
+      GPS_COOKIE_SECURE: ${GPS_COOKIE_SECURE:-0}
+    ports:
+      - "127.0.0.1:${GPS_PORT:-5050}:5050"
+    volumes:
+      - gps_data:/app/instance
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  gps_data:

@@ -1,0 +1,9 @@
+line-length = 100
+target-version = "py311"
+
+[lint]
+select = ["E", "W", "I", "B", "UP"]
+
+[lint.per-file-ignores]
+"tests/test_analytics.py" = ["E402"]
+"tests/test_system.py" = ["E402"]
