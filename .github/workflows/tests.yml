@@ -28,7 +28,7 @@ jobs:
         with:
           name: cobertura-${{ matrix.python }}
           path: coverage.xml
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v7
         if: matrix.python == '3.12' && github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           files: coverage.xml
