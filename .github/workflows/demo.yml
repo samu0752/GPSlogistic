@@ -23,7 +23,7 @@ jobs:
       - run: |
           mkdir -p dist
           cp GPSlogistic-demonstracao.html dist/index.html
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
       - uses: actions/deploy-pages@v4
