@@ -1,0 +1,23 @@
+name: Evolução do GPSlogistic
+description: Registre uma funcionalidade do roadmap com critério de aceite.
+title: "[Roadmap] "
+body:
+  - type: textarea
+    id: objetivo
+    attributes:
+      label: Objetivo
+      description: Descreva o resultado esperado para quem opera o estoque.
+    validations:
+      required: true
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Critérios de aceite
+      description: Inclua cenários verificáveis e impacto no estoque.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencias
+    attributes:
+      label: Dependências
+      description: Aponte issues relacionadas, mudanças no banco ou dependências de implantação.
